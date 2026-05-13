@@ -1,49 +1,55 @@
 const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
+const bodyParser = require('body-parser');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-let db;
+const db = new sqlite3.Database('./road_data.db', (err) => {
+    if (err) console.error(err.message);
+    console.log('Connected to RDA Road Database.');
+});
 
-// 1. Setup the SQL Database
-(async () => {
-    db = await open({
-        filename: './road_data.db',
-        driver: sqlite3.Database
+// Table matches your 'Classification' and 'GIS Mapping' outcomes
+db.run(`CREATE TABLE IF NOT EXISTS cracks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    severity TEXT,
+    lat REAL,
+    lng REAL
+)`);
+
+app.get('/api/cracks', (req, res) => {
+    db.all("SELECT * FROM cracks", [], (err, rows) => {
+        if (err) return res.status(500).send(err);
+        res.json(rows);
     });
-
-    // Create the SQL table exactly as described in your presentation
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS cracks (
-            id INTEGER PRIMARY KEY AUTO_INCREMENT,
-            type TEXT,
-            location TEXT,
-            severity TEXT,
-            lat REAL,
-            lng REAL
-        )
-    `);
-    console.log("SQL Database & Table Ready.");
-})();
-
-// 2. GET data using SQL Query
-app.get('/api/cracks', async (req, res) => {
-    const cracks = await db.all('SELECT * FROM cracks');
-    res.json(cracks);
 });
 
-// 3. INSERT data using SQL Query
-app.post('/api/add-crack', async (req, res) => {
-    const { type, location, severity, lat, lng } = req.body;
-    await db.run(
-        'INSERT INTO cracks (type, location, severity, lat, lng) VALUES (?, ?, ?, ?, ?)',
-        [type, location, severity, lat, lng]
-    );
-    res.status(200).send("Saved to SQL Database");
+app.post('/api/cracks', (req, res) => {
+    const { type, severity, lat, lng } = req.body;
+    db.run(`INSERT INTO cracks (type, severity, lat, lng) VALUES (?, ?, ?, ?)`, 
+    [type, severity, lat, lng], function(err) {
+        if (err) return res.status(500).send(err);
+        res.json({ id: this.lastID });
+    });
 });
 
-app.listen(5000, () => console.log("Backend Server with SQL running on Port 5000"));
+app.put('/api/cracks/:id', (req, res) => {
+    const { lat, lng } = req.body;
+    db.run(`UPDATE cracks SET lat = ?, lng = ? WHERE id = ?`, [lat, lng, req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Updated" });
+    });
+});
+
+app.delete('/api/cracks/:id', (req, res) => {
+    db.run(`DELETE FROM cracks WHERE id = ?`, [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Repaired" });
+    });
+});
+
+app.listen(5000, () => console.log('Backend Services running on port 5000'));
