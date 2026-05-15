@@ -12,7 +12,7 @@ const db = new sqlite3.Database('./road_data.db', (err) => {
     console.log('Connected to RDA Road Database.');
 });
 
-// Table matches your 'Classification' and 'GIS Mapping' outcomes
+
 db.run(`CREATE TABLE IF NOT EXISTS cracks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,

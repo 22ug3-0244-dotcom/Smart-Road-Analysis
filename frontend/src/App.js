@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
 
-// Fix for default Leaflet icons
+
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({
@@ -12,7 +12,7 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- LOGIN SCREEN ---
+
 const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,7 +42,7 @@ const LoginScreen = ({ onLogin }) => {
   );
 };
 
-// --- MAP HELPER COMPONENTS ---
+
 const MapEvents = ({ onMapClick }) => {
   useMapEvents({
     click(e) { onMapClick(e.latlng); },
@@ -58,7 +58,7 @@ const MapController = ({ selectedPos }) => {
   return null;
 };
 
-// --- MAIN APPLICATION ---
+
 function App() {
   const [user, setUser] = useState(null); 
   const [cracks, setCracks] = useState([]);
@@ -67,7 +67,6 @@ function App() {
   const [isAutoFetchActive, setIsAutoFetchActive] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // RDA Officer/Team List
   const officers = [
     "Eng. Karunaratne (Colombo)", 
     "Eng. Jayasuriya (Kandy)", 
@@ -81,7 +80,6 @@ function App() {
     try {
       const response = await fetch('http://localhost:5000/api/cracks');
       const data = await response.json();
-      // Ensure each crack has an assignedTo status
       const formattedData = data.map(c => ({ ...c, assignedTo: c.assignedTo || "Unassigned" }));
       setCracks(formattedData);
     } catch (e) { console.error("Backend offline"); }
@@ -226,7 +224,6 @@ function App() {
                   <div className="map-popup">
                     <strong>{crack.type}</strong>
                     <p className="popup-status">Status: {crack.assignedTo === "Unassigned" ? "🔴 Pending" : "🟠 Assigned"}</p>
-                    
                     <label className="assign-label">Dispatch Officer:</label>
                     <select 
                       className="assign-select"
@@ -236,7 +233,6 @@ function App() {
                       <option value="Unassigned">Waiting for Assignment...</option>
                       {officers.map(off => <option key={off} value={off}>{off}</option>)}
                     </select>
-                    
                     <hr />
                     <a href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${crack.lat},${crack.lng}`} target="_blank" rel="noreferrer" className="sv-btn">
                       Open Street View

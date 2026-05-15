@@ -1,0 +1,6 @@
+
+train: ./data/test_images
+val: ./data/test_images
+
+nc: 1
+names: ['crack']
